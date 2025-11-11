@@ -4,7 +4,11 @@ const app = express();
 const PORT = 6000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: ["http://genzcodershub.com", "http://www.genzcodershub.com"],
+    methods: "GET,POST,PUT,DELETE",
+    credentials: true
+}));
 app.use(express.json());
 
 // Sample users
