@@ -1,31 +1,34 @@
-name: Deploy Server (Dockerized)
+name: 🚀 Deploy Backend (Dockerized)
 
 on:
   push:
     branches: ["main"]
 
 jobs:
-  deploy:
+  deploy-backend:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the code
+      # ✅ Step 1: Checkout the latest code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Build & Push Docker Image to Docker Hub
-      - name: Build and Push Docker Image
+      # ✅ Step 2: Build & Push Docker image to Docker Hub
+      - name: Build and Push Backend Image
         run: |
-          echo "🔧 Building backend Docker image..."
-          docker build -t vineeshw1994/genz-backend -f Dockerfile .
+          echo "🔧 Building backend image..."
+          docker build --no-cache -t vineeshw1994/genz-backend:${{ github.sha }} -f Dockerfile .
 
           echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USER }}" --password-stdin
 
-          echo "📦 Pushing backend image to Docker Hub..."
+          echo "🏷️ Tagging and pushing backend image..."
+          docker tag vineeshw1994/genz-backend:${{ github.sha }} vineeshw1994/genz-backend:latest
+
+          docker push vineeshw1994/genz-backend:${{ github.sha }}
           docker push vineeshw1994/genz-backend:latest
 
-      # SSH Deploy to production server
-      - name: SSH Deploy to Server
+      # ✅ Step 3: SSH into server and update container
+      - name: SSH Deploy Backend
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.PROD_HOST }}
@@ -33,18 +36,18 @@ jobs:
           key: ${{ secrets.PROD_SSH_KEY }}
           port: 22
           script: |
+            set -e
             echo "🚀 Deploying Backend..."
 
             cd /var/www/Git_Actions
 
-            echo "🧱 Pulling latest backend Docker image..."
-            docker pull vineeshw1994/genz-backend:latest
+            echo "🧱 Pulling latest backend image..."
+            docker compose pull backend
 
-            echo "🧹 Removing old unused images..."
+            echo "♻️ Recreating backend container..."
+            docker compose up -d --force-recreate backend
+
+            echo "🧹 Cleaning unused images..."
             docker image prune -f
-
-            echo "♻️ Restarting backend container..."
-            docker-compose pull backend
-            docker-compose up -d backend
 
             echo "✅ Backend deployed successfully!"
