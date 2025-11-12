@@ -1,18 +1,17 @@
-# Use official Node image
-FROM node:18
+# --- Build lightweight node image ---
+FROM node:18-alpine
 
-# Create app directory
-WORKDIR /usr/src/app
+WORKDIR /app
 
-# Copy dependencies
+# Copy dependencies first (for better caching)
 COPY package*.json ./
-RUN npm install
 
-# Copy app files
+RUN npm install --production
+
+# Copy app code
 COPY . .
 
-# Expose port
-EXPOSE 5000
+# Expose app port
+EXPOSE 6000
 
-# Start app
-CMD ["npm", "start"]
+CMD ["node", "server.js"]
