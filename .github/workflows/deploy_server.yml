@@ -40,7 +40,11 @@ jobs:
             echo "🧱 Pulling latest backend Docker image..."
             docker pull vineeshw1994/genz-backend:latest
 
+            echo "🧹 Removing old unused images..."
+            docker image prune -f
+
             echo "♻️ Restarting backend container..."
+            docker-compose pull backend
             docker-compose up -d backend
 
             echo "✅ Backend deployed successfully!"
